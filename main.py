@@ -40,46 +40,7 @@ def setup_logger():
         retention="30 days"
     )
 
-def get_update_dates(config, days_back=30):
-    """
-    获取更新日期范围
-    
-    Args:
-        config: 配置对象
-        days_back: 向前追溯的天数，默认30天
-        
-    Returns:
-        tuple: (trade_dates, calendar_dates)
-    """
-    end_date = datetime.now().strftime('%Y%m%d')
-    start_date = (datetime.now() - timedelta(days=days_back)).strftime('%Y%m%d')
-    
-    # 获取交易日期（需要数据库连接）
-    conn = pymysql.connect(
-        host=config.MYSQL_HOST,
-        port=config.MYSQL_PORT,
-        user=config.MYSQL_USER,
-        password=config.MYSQL_PASSWORD,
-        database=config.MYSQL_DATABASE,
-        charset='utf8mb4'
-    )
-    
-    try:
-        from utils import get_trade_dates
-        trade_dates = get_trade_dates(conn, start_date, end_date)
-    finally:
-        conn.close()
-    
-    # 获取日历日期（包含明天）
-    calendar_dates = generate_date_range(start_date, end_date, include_next_day=True)
-    
-    logger.info(f"更新日期范围: {start_date} 至 {end_date}")
-    logger.info(f"交易日期数量: {len(trade_dates)}")
-    logger.info(f"日历日期数量: {len(calendar_dates)}")
-    
-    return trade_dates, calendar_dates
-
-def update_convertible_bond_data(trade_dates, calendar_dates):
+def update_convertible_bond_data():
     """更新可转债数据"""
     logger.info("=" * 60)
     logger.info("开始更新可转债数据模块")
@@ -95,7 +56,7 @@ def update_convertible_bond_data(trade_dates, calendar_dates):
     
     return True
 
-def update_stock_info_data(trade_dates, calendar_dates):
+def update_stock_info_data():
     """更新股票信息数据"""
     logger.info("=" * 60)
     logger.info("开始更新股票信息数据模块")
@@ -118,9 +79,8 @@ def update_basic_data():
     logger.info("=" * 60)
     
     try:
-        # 这里可以添加基础数据更新逻辑
-        # 比如交易日历、股票列表等
-        logger.info("基础数据更新暂未实现")
+        from BasicArchiver.BasicDailyArchiver import main as basic_main
+        basic_main()
         return True
     except Exception as e:
         logger.error(f"基础数据更新失败: {e}")
@@ -273,13 +233,6 @@ def main():
     logger.info("🎉 所有连接测试通过，开始数据更新流程")
     logger.info("=" * 60)
     
-    # 获取更新日期
-    try:
-        trade_dates, calendar_dates = get_update_dates(config, days_back=30)
-    except Exception as e:
-        logger.error(f"获取更新日期失败: {e}")
-        return
-    
     # 存储更新结果
     results = {}
     
@@ -289,11 +242,11 @@ def main():
     
     # 2. 更新可转债数据
     logger.info("🔄 步骤 2/3: 更新可转债数据")
-    results["可转债数据"] = update_convertible_bond_data(trade_dates, calendar_dates)
+    results["可转债数据"] = update_convertible_bond_data()
     
     # 3. 更新股票信息数据
     logger.info("🔄 步骤 3/3: 更新股票信息数据")
-    results["股票信息数据"] = update_stock_info_data(trade_dates, calendar_dates)
+    results["股票信息数据"] = update_stock_info_data()
     
     # 打印结果摘要
     print_summary(results)
