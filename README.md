@@ -51,7 +51,7 @@ pip install tushare pymysql pandas numpy loguru rich
 建议使用 conda 创建独立环境：
 ```bash
 # 创建环境（可自定义环境名称）
-conda create -n tushare python=3.8
+conda create -n tushare python=3.12
 conda activate tushare
 
 # 安装依赖
@@ -293,9 +293,6 @@ schtasks /create /tn "TushareArchiverPublic_Daily" /tr "C:\path\to\your\TushareA
 # 克隆项目
 git clone <repository_url>
 cd TushareArchiverPublic
-
-# 安装依赖
-pip install -r requirements.txt
 
 # 配置数据库和Token
 vim config.py
